@@ -33,10 +33,10 @@ void show(Hand h){
 int main(){
 	Cards allcard =(1LL<<53)-1;
 	fieldInfo info;
-	info.onset=false;
+	info.onset=true;
 	info.qty=2;info.suit=6;info.ord=2;info.seq=false;
 	info.rev=1;info.lock=true;
-	vector<Hand> r = getAllValidHands(info,allcard);
+	vector<Hand> r = getAllValidHands(info,allcard,true);
 	for(int i=0;i<r.size();i++){
 		show(r[i]);
 	}

@@ -7,8 +7,22 @@
 
 using namespace std;
 //Cards == int64
+
+vector<Hand> insertJoker(Hand h){
+	vector<Hand> res;
+	for(int i=0;i<53;i++){
+		const Cards c = 1LL<<i;
+		if(h.hands&c){
+			Hand t=h;
+			t.hands^=c;
+			res.push_back(t);
+		}
+	}
+	return res;
+}
+
 vector<Hand> getGroup(Cards myCards,int num,int min_ord,
-		bool rev,unsigned char suit){
+		bool rev,unsigned char suit,bool strict){
 	vector<Hand> res;
 	bool joker = myCards&JOKER;
 	for(int i=min_ord;i>=0&&i<13;rev?i--:i++){
@@ -17,8 +31,8 @@ vector<Hand> getGroup(Cards myCards,int num,int min_ord,
 			const int count = bitCount(k);
 			//手札でマークkの役がつくれるか。ジョーカーがある場合も考える
 			if((suit==0||suit==k)
-					&&(num==0||count==num)
-					&&((tmp&k)==k||(joker&&(count>1)&&bitCount(tmp&k)==(count-1)))){
+				&&(num==0||count==num)
+				&&((tmp&k)==k||(joker&&(count>1)&&bitCount(tmp&k)==(count-1)))){
 				Hand h;
 				h.hands = (tmp&k)<<(4*i);
 				h.qty=count;
@@ -26,6 +40,10 @@ vector<Hand> getGroup(Cards myCards,int num,int min_ord,
 				h.ord = i;
 				h.suit=k;
 				res.push_back(h);
+				if(strict&&(count>1)&&joker&&((tmp&k)==k)){
+					vector<Hand> ij = insertJoker(h);
+					res.insert(res.end(),ij.begin(),ij.end());
+				}
 			}
 		}
 	}
@@ -43,7 +61,7 @@ vector<Hand> getGroup(Cards myCards,int num,int min_ord,
 }
 
 vector<Hand> getSeq(Cards myCards,int num,int min_ord,
-		bool rev,unsigned char suit){
+		bool rev,unsigned char suit,bool strict){
 	vector<Hand> res;
 	bool joker = myCards&JOKER;
 	for(int s=0;s<4;s++){
@@ -72,6 +90,10 @@ vector<Hand> getSeq(Cards myCards,int num,int min_ord,
 					h.ord=rev?k:i;
 					h.suit=1<<s;
 					res.push_back(h);
+					if(strict&&joker&&(use_joker==0LL)){
+						vector<Hand> ij = insertJoker(h);
+						res.insert(res.end(),ij.begin(),ij.end());
+					}
 				}
 			}
 		}
@@ -79,22 +101,22 @@ vector<Hand> getSeq(Cards myCards,int num,int min_ord,
 	return res;
 }
 
-vector<Hand> getAllValidHands(const fieldInfo& info,Cards myCards){
+vector<Hand> getAllValidHands(const fieldInfo& info,Cards myCards,bool strict){
 	vector<Hand> res;
 	if(info.onset){
-		res=getGroup(myCards);
-		vector<Hand> t=getSeq(myCards);
-		res.insert(res.begin(),t.begin(),t.end());
+		res=getGroup(myCards,0,0,false,0,strict);
+		vector<Hand> t=getSeq(myCards,0,0,false,0,strict);
+		res.insert(res.end(),t.begin(),t.end());
 	}else{
 		if(!info.seq){
 		res=getGroup(myCards,info.qty,info.ord+(info.rev?-1:1)
-				,info.rev,info.lock?info.suit:0);
+				,info.rev,info.lock?info.suit:0,strict);
 		}
 		if(info.seq){
 		vector<Hand> t=getSeq(myCards,info.qty,
 				info.ord+(info.rev?-1:info.qty)
-				,info.rev,info.lock?info.suit:0);
-		res.insert(res.begin(),t.begin(),t.end());}
+				,info.rev,info.lock?info.suit:0,strict);
+		res.insert(res.end(),t.begin(),t.end());}
 		//pass
 		Hand h;
 		h.hands=0LL;
