@@ -1,6 +1,6 @@
 TARGET	= client
-SRCS	= client.cpp connection.c daihinmin.c mydef.cpp cardChange.c cardSelect.cpp handGenerator.cpp bitCard.cpp myrandom.cpp
-OBJS	= mydef.o client.o connection.o daihinmin.o cardChange.o cardSelect.o handGenerator.o bitCard.o myrandom.o
+SRCS	= client.cpp connection.c daihinmin.c mydef.cpp cardChange.c cardSelect.cpp handGenerator.cpp bitCard.cpp myrandom.cpp mydebug.cpp
+OBJS	= mydef.o client.o connection.o daihinmin.o cardChange.o cardSelect.o handGenerator.o bitCard.o myrandom.o mydebug.o
 
 CC = gcc
 CPP= g++ -std=c++0x

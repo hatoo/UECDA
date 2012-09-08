@@ -1,6 +1,10 @@
 #include <cmath>
-
+#include "bitCard.h"
 #include "mydef.h"
+
+bool Hand::jokerUsed(){
+	return bitCount(hands)!=qty;
+}
 
 void fieldInfo::set(int my_num,ProtocolCards& p){
 	onset = p[5][4] > 0;
@@ -70,6 +74,11 @@ void fieldInfo::set_ba(ProtocolCards& cards){
 			goal |= (1 << seat[cur]);
 	}
 }
+
+bool fieldInfo::SingleJoker(){
+	return qty==1&&(rev?ord==-1:ord==13);
+}
+
 /*
 void fieldInfo::set_ba(ProtocolCards &cards){
 	fieldInfo *info=this;

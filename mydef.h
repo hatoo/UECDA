@@ -15,12 +15,13 @@ typedef int ProtocolCards[8][15];
 
 // 手の情報を保持する構造体
 //const Cards NO_JOKER=0;
-typedef struct{
+typedef struct __Hand{
 	Cards hands;//ジョーカー以外のカードの集合
 	unsigned char qty;   // カード枚数
 	bool seq;   // 階段かどうか
 	unsigned char ord;   // 強さ(通常時で一番弱い)
 	unsigned char suit;  // マーク
+	bool jokerUsed();
 } Hand;
 
 //typedef vector<Hand> Hands;
@@ -42,6 +43,7 @@ typedef struct __fieldInfo{
 	int rank[5]; // rank[i] : 席iに座っているプレイヤーの階級 0-4->大富豪-大貧民
 	void set(int my_num,ProtocolCards& p);
 	void set_ba(ProtocolCards& cards);
+	bool SingleJoker();
 } fieldInfo;
 
 typedef struct{

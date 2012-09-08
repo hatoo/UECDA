@@ -141,7 +141,56 @@ void removeHands(vector<Hand>& hands,Crads submit,Cards myCards);
 vector<Hand> generateAllHands(int64 myCards);
 
 //void generateGroup(bitValidHandsArray *vha, int64 myCards);
-
-//パス以外の行動を取れるか
-bool checkAllValidHands(const fieldInfo& info, int64 myCards);
 */
+//パス以外の行動を取れるか
+bool checkAllValidHands(fieldInfo& info, Cards myCards){
+	if(info.onset)return true;
+	if(info.qty==1&&(myCards&JOKER))return true;
+	//スペ3
+	if(info.SingleJoker()){
+		return myCards&SP3;
+	}
+	if(info.seq){
+		Cards mask=0;
+		for(int i=0;i<info.qty;i++){
+			mask<<=4;
+			mask+=(info.lock?info.suit:1);
+		}
+		if(info.rev){
+			mask<<=((info.ord-info.qty)*4);
+		}else{
+			mask<<=((info.ord+info.qty)*4);
+		}
+		const Cards tmp=mask;
+		for(int k=0;k<4;k++){
+			mask=tmp<<k;
+			for(int i=0;i<(info.rev?info.ord-info.qty+1:14-info.ord-2*info.qty);
+					i++,info.rev?mask>>=4:mask<<=4){
+				if(myCards&JOKER){
+					if(bitCount((myCards&mask)^mask)<=1)return true;
+				}else if((myCards&mask)==mask)return true;
+			}
+			if(info.lock)return false;
+		}
+	}else{
+		for(int ord=info.rev?info.ord-1:info.ord+1;
+				ord>=0&&ord<=12;
+				info.rev?ord--:ord++){
+			if(info.lock){
+				Cards mask=info.suit;
+				mask<<=(4*ord);
+				if(myCards&JOKER){
+					if(bitCount(myCards&mask)>=info.qty-1 )return true;
+				}else if((myCards&mask)==mask)return true;
+			}else{
+				Cards mask=0xF;
+				mask<<=(4*ord);
+				if(myCards&JOKER){
+					if(bitCount(myCards&mask)>=(info.qty-1))return true;
+				}else if(bitCount(myCards&mask)>=info.qty)return true;
+			}
+		}
+	}
+	return false;
+}
+

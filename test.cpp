@@ -31,16 +31,18 @@ void show(Hand h){
 }
 
 int main(){
-	Cards allcard =(1LL<<53)-1;
+	Cards allcard = 4;
 	fieldInfo info;
-	info.onset=true;
-	info.qty=2;info.suit=6;info.ord=2;info.seq=false;
-	info.rev=1;info.lock=true;
+	info.onset=false;
+	info.qty=1;info.suit=2;info.ord=4;info.seq=false;
+	info.rev=0;info.lock=false;
+	/*
 	vector<Hand> r = getAllValidHands(info,allcard,true);
 	for(int i=0;i<r.size();i++){
 		show(r[i]);
 	}
 	cout << "size= " << r.size() << endl;
-
+	*/
+	cout << checkAllValidHands(info,allcard)<<endl;
 	return 0;
 }
