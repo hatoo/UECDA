@@ -90,3 +90,8 @@ int minStrength(Cards c,bool rev=false){
 	return 0;
 }
 
+Cards diffHand(Cards c,Hand &h){
+	c^=(c&h.hands);
+	if(h.jokerUsed())c^=(c&JOKER);
+	return c;
+}

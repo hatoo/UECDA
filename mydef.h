@@ -45,6 +45,7 @@ typedef struct __fieldInfo{
 	void set_ba(ProtocolCards& cards);
 	bool SingleJoker();
 	void submit(const Hand &h);
+	int simulate(const Hand &h,int pos);//次にカードをだす権利のある人を返す
 	void reset();//revは保持する
 } fieldInfo;
 

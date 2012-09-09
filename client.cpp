@@ -12,6 +12,7 @@
 #include "cardChange.h"
 #include "bitCard.h"
 #include "cardSelect.h"
+#include "myrandom.h"
 using namespace std;
 const int g_logging = 0;		// ƒƒOæ‚è‚ğ‚·‚é‚©”Û‚©‚ğ”»’è‚·‚é‚½‚ß‚Ì•Ï”
 
@@ -36,6 +37,8 @@ int main(int argc, char *argv[])
 
 	// ƒQ[ƒ€‚ÉQ‰Á
 	my_playernum = entryToGame();
+
+	initRand();
 
 	while (whole_gameend_flag == 0) {
 		bool game_begin=true;

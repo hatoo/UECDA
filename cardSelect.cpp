@@ -7,6 +7,7 @@
 #include "bitCard.h"
 #include "myrandom.h"
 #include "mydebug.h"
+#include "montecarlo.h"
 
 using namespace std;
 
@@ -16,31 +17,22 @@ int mcount =0;
 void removeHands(vector<Hand> &hands,Hand){
 }
 
-
-void putHand(fieldInfo &f,const Hand &h){
-	f.lock = !f.onset&&f.suit==h.suit;
-	f.onset=false;
-	f.qty=h.qty;
-	f.suit=h.suit;
-	f.ord=h.ord;
-	f.seq=h.seq;
-}
-
 bool isWIN(fieldInfo info,Cards myCards,Cards oppCards,int maxHandNum,set<Cards>& failed){
 	if(failed.find(myCards)!=failed.end())return false;
 	vector<Hand> vhs = getAllValidHands(info,myCards);
 	for(int i=0;i<vhs.size();i++){
 		fieldInfo t=info;
-		putHand(t,vhs[i]);
+		t.submit(vhs[i]);
 		if(vhs[i].hands&(0xf<<5) //8切り
 				|| vhs[i].qty>maxHandNum
-				|| (maxStrength(oppCards,info.rev)<=minStrength(myCards,info.rev))
+				// || (maxStrength(oppCards,info.rev)<=minStrength(myCards,info.rev))
 				|| !checkAllValidHands(t,oppCards)){
 			Cards next = myCards^vhs[i].hands;
 			if(vhs[i].jokerUsed())next^=JOKER;
 			if(next==0)return true;
 			if(failed.find(next)!=failed.end())return false;
-			t.onset=true;t.suit=0;t.qty=0;
+			//t.onset=true;t.suit=0;t.qty=0;
+			t.reset();
 			bool b = isWIN(t,next,oppCards,maxHandNum,failed);
 			if(b)return true;
 		}
@@ -118,5 +110,7 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		dumpHand(h);
 		cerr << endl;
 	}
+	Cards out[5];
+	//DevideCards(info,oppCards,out);
 	setSubmitCard(p,h.qty!=0?h:hs[randInt(0,hs.size()-1)]);
 }

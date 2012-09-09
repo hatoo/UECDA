@@ -11,5 +11,6 @@ void bitToArray(ProtocolCards cards, Cards bitCards);
 void setSubmitCard(ProtocolCards submit, const Hand& h);
 
 int maxStrength(Cards c,bool rev);
-
 int minStrength(Cards c,bool rev);
+
+Cards diffHand(Cards c,Hand &h);

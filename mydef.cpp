@@ -80,6 +80,7 @@ bool fieldInfo::SingleJoker(){
 }
 
 void fieldInfo::submit(const Hand &h){
+	if(h.qty==0)return;//pass
 	lock = !onset&&suit==h.suit;
 	onset=false;
 	qty=h.qty;
@@ -100,6 +101,41 @@ void fieldInfo::reset(){
 	lock=0;
 	pass=0;
 }
+
+int fieldInfo::simulate(const Hand &h,int pos){
+	const int ALL = 0x1F;
+	submit(h);
+	if(h.qty==0){
+		pass|=(1<<pos);
+	}
+	lest[pos]-=h.qty;
+	if(lest[pos]==0){
+		goal|=(1<<pos);
+	}
+	if(pass==ALL){
+		reset();
+		pass=goal;
+		if(goal==ALL){
+			return pos;//とりあえずposを返す
+		}else{
+			int i=pos;
+			while(goal&(1<<i)){
+				i++;
+				i%=5;
+			}
+			return i;
+		}
+	}else{
+		int i=pos;
+		while(pass&(1<<i)){
+			i++;
+			i%=5;
+		}
+		return i;
+	}
+}
+
+
 /*
 void fieldInfo::set_ba(ProtocolCards &cards){
 	fieldInfo *info=this;
