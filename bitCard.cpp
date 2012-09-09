@@ -72,3 +72,21 @@ void setSubmitCard(int submit[8][15], const Hand& h){
 	}
 }
 
+int maxStrength(Cards c,bool rev=false){
+	if(c&JOKER)return 13;
+	if(rev)return 12 - minStrength(c,false);
+	for(int i=12;i>=0;i--){
+		if(c&(0xF<<(4*i)))return i;
+	}
+	return 0;
+}
+
+int minStrength(Cards c,bool rev=false){
+	if(c&JOKER)return 13;
+	if(rev)return 12 - maxStrength(c,false);
+	for(int i=0;i<=12;i++){
+		if(c&(0xf<<(4*i)))return i;
+	}
+	return 0;
+}
+

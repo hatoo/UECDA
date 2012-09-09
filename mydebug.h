@@ -1,5 +1,7 @@
 #include "mydef.h"
 
+#pragma once
+
 using namespace std;
 
 void dumpCards(Cards c);

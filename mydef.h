@@ -44,6 +44,8 @@ typedef struct __fieldInfo{
 	void set(int my_num,ProtocolCards& p);
 	void set_ba(ProtocolCards& cards);
 	bool SingleJoker();
+	void submit(const Hand &h);
+	void reset();//revは保持する
 } fieldInfo;
 
 typedef struct{

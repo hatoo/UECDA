@@ -79,6 +79,27 @@ bool fieldInfo::SingleJoker(){
 	return qty==1&&(rev?ord==-1:ord==13);
 }
 
+void fieldInfo::submit(const Hand &h){
+	lock = !onset&&suit==h.suit;
+	onset=false;
+	qty=h.qty;
+	suit=h.suit;
+	ord=h.ord;
+	seq=h.seq;
+	if((h.seq&&h.qty>=5)||(!h.seq&&h.qty>=4)){
+		rev=!rev;
+	}
+}
+
+void fieldInfo::reset(){
+	onset=true;
+	suit=0;
+	qty=0;
+	seq=false;
+	ord=0;
+	lock=0;
+	pass=0;
+}
 /*
 void fieldInfo::set_ba(ProtocolCards &cards){
 	fieldInfo *info=this;

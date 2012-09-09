@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 
 	changeInfo cinfo;
 	fieldInfo finfo;
+	Cards oppCards=0;
 	// 引数のチェック
 	// 引数に従ってサーバアドレス、接続ポート、クライアント名を変更
 	checkArg(argc, argv);
@@ -37,7 +38,6 @@ int main(int argc, char *argv[])
 	my_playernum = entryToGame();
 
 	while (whole_gameend_flag == 0) {
-
 		bool game_begin=true;
 
 		one_gameend_flag = 0;	// 1ゲームが終わった事を示すフラグを初期化
@@ -76,14 +76,18 @@ int main(int argc, char *argv[])
 		}						// カード交換ここまで
 
 		while (one_gameend_flag == 0) {	// 1ゲームが終わるまでの繰り返し
+			bool is_my_turn = receiveCards(own_cards);
+
 			if(game_begin){
 				game_begin=false;
 				cinfo.firstPlayer=-1;
 				finfo.goal=0;
+				const Cards allCards = (1LL << 53) -1;
+				const Cards myCards = setBit(own_cards);
+				oppCards = allCards^myCards;
 			}
 
 			int select_cards[8][15] = { {0} };	// 提出用のテーブル
-			bool is_my_turn = receiveCards(own_cards);
 			finfo.set(my_playernum, own_cards);
 
 			if (is_my_turn) {	// カードをown_cardsに受け取り
@@ -93,7 +97,7 @@ int main(int argc, char *argv[])
 				clearCards(select_cards);	// 選んだカードのクリア
 				Cards myCards=setBit(own_cards);
 				//finfo.onset=state.onset;
-				selectHand(select_cards,finfo,myCards);
+				selectHand(select_cards,finfo,myCards,oppCards);
 				/*
 				// ///////////////////////////////////////////////////////////
 				// アルゴリズムここから
@@ -167,6 +171,7 @@ int main(int argc, char *argv[])
 				cinfo.firstPlayer = finfo.seat[ba_cards[5][3]];
 			}
 			finfo.set_ba(ba_cards);
+			oppCards ^= (oppCards&setBit(ba_cards));
 
 			// /////////////////////////////////////////////////////////////
 			// カードが出されたあと 誰かがカードを出す前の処理はここに書く
