@@ -76,7 +76,7 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 				|| (info.rev&&hs[i].ord>hs[idx].ord)){
 					idx=i;
 				}
-	}*/
+	}
 	bool b = checkAllValidHands(info,myCards);
 	if(!info.onset&&b!=(hs.size()>1)){
 		cerr << "checkAllValidHands error" << endl;
@@ -85,7 +85,7 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		dumpCards(myCards);
 		dumpFinfo(info);
 	}
-
+*/
 	int maxHandNum=0;
 	for(int i=0;i<5;i++){
 		if(i!=info.mypos){
@@ -110,7 +110,14 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		dumpHand(h);
 		cerr << endl;
 	}
-	Cards out[5];
+	//Cards out[5];
 	//DevideCards(info,oppCards,out);
-	setSubmitCard(p,h.qty!=0?h:hs[randInt(0,hs.size()-1)]);
+	int o = playout(info,hs.back(),myCards,oppCards);
+	if(h.qty>0 && o!=bitCount(info.goal)){
+		cerr << "qty= " << (int)h.qty << endl;
+		cerr << "o= " << o << endl;
+		cerr << "goal= " << bitCount(info.goal) << endl;
+		cerr << endl;
+	}
+	setSubmitCard(p,h.qty!=0?h:montecalroSearch(info,myCards,oppCards));
 }

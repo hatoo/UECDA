@@ -1,6 +1,10 @@
 #include <cmath>
 #include "bitCard.h"
 #include "mydef.h"
+#include "mydebug.h"
+#include <iostream>
+
+using namespace std;
 
 bool Hand::jokerUsed(){
 	return bitCount(hands)!=qty;
@@ -23,8 +27,12 @@ void fieldInfo::set(int my_num,ProtocolCards& p){
 		if(p[6][i+10] == my_num)mypos=i;
 	}
 
+	goal=0;
 	for(int i=0;i<5;i++){
 		lest[seat[i]]=p[6][i];
+		if(lest[seat[i]]==0){
+			goal|=(1<<seat[i]);
+		}
 		rank[seat[i]]=p[6][i+5];
 	}
 }
@@ -103,6 +111,11 @@ void fieldInfo::reset(){
 }
 
 int fieldInfo::simulate(const Hand &h,int pos){
+	/*if(lest[pos]<=0){
+		cerr << "err " << endl;
+		dumpHand(h);
+	}*/
+	const Cards Eight = 0xF << 5;
 	const int ALL = 0x1F;
 	submit(h);
 	if(h.qty==0){
@@ -112,7 +125,8 @@ int fieldInfo::simulate(const Hand &h,int pos){
 	if(lest[pos]==0){
 		goal|=(1<<pos);
 	}
-	if(pass==ALL){
+	pass |= goal;
+	if(pass==ALL || (h.hands&Eight)){
 		reset();
 		pass=goal;
 		if(goal==ALL){
@@ -126,7 +140,7 @@ int fieldInfo::simulate(const Hand &h,int pos){
 			return i;
 		}
 	}else{
-		int i=pos;
+		int i=(pos+1)%5;
 		while(pass&(1<<i)){
 			i++;
 			i%=5;

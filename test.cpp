@@ -3,6 +3,8 @@
 #include "handGenerator.h"
 #include <vector>
 #include "bitCard.h"
+#include "myrandom.h"
+#include "montecarlo.h"
 
 using namespace std;
 
@@ -31,11 +33,19 @@ void show(Hand h){
 }
 
 int main(){
-	Cards allcard = 4;
+	initRand();
+	Cards allcard = (1LL<<40)-1;
+
 	fieldInfo info;
 	info.onset=false;
 	info.qty=1;info.suit=2;info.ord=4;info.seq=false;
-	info.rev=0;info.lock=false;
+	info.rev=0;info.lock=false;info.mypos=0;
+	info.lest[1]=10;
+	info.lest[2]=10;
+	info.lest[3]=10;
+	info.lest[4]=10;
+	Cards out[5];//={0};
+	DevideCards(info,allcard,out);
 	/*
 	vector<Hand> r = getAllValidHands(info,allcard,true);
 	for(int i=0;i<r.size();i++){
@@ -43,6 +53,10 @@ int main(){
 	}
 	cout << "size= " << r.size() << endl;
 	*/
-	cout << checkAllValidHands(info,allcard)<<endl;
+	//cout << checkAllValidHands(info,allcard)<<endl;
+	for(int i=1;i<5;i++){
+		showCards(out[i]);
+	}
+	cout << sizeof(Cards) << endl;
 	return 0;
 }
