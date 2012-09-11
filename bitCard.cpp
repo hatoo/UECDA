@@ -1,18 +1,23 @@
-/* bitCard.c : ƒrƒbƒg•\Œ»‚µ‚½ƒJ[ƒhW‡‚É‘Î‚·‚é‘€ì‚ğ’è‹` */ 
+/* bitCard.c : ?r?b?g?\???????J?[?h?W???É‘Î‚??é‘€???????` */ 
 /* Author    : Fumiya Suto                                */
 #include <cstring>
+//#include <smmintrin.h>
 #include "bitCard.h"
 #include "mydef.h"
 
-// —^‚¦‚ç‚ê‚½ƒrƒbƒg”z—ñ’†‚Ì1ƒrƒbƒg‚Ì”‚ğ•Ô‚·
-int bitCount(int64 cards){
+// ?^?????ê‚½?r?b?g?z?ñ’†‚?1?r?b?g?Ì????Ô‚?
+/*
+inline int bitCount(int64 cards){
 	int64 t;
 	int res = 0;
 	for(t=cards;t;t&=(t-1)) res++;
-	return res;
+	unsigned long low = cards;
+	unsigned long high= cards>>32;
+	return _mm_popcnt_u32(low)+_mm_popcnt_u32(high);
 }
+*/
 
-// ”z—ñ•\Œ»‚³‚ê‚Ä‚¢‚éƒJ[ƒhW‡‚ğƒrƒbƒg•\Œ»‚É•ÏŠ·‚·‚é
+// ?z???\???????Ä‚????J?[?h?W?????r?b?g?\???É•ÏŠ?????
 Cards setBit(ProtocolCards cards){
 	int64 result = 0;
 	int64 jokerBit = (1LL << 52);
@@ -41,7 +46,7 @@ void bitToArray(int cards[8][15], int64 bitCards){
 	if((bitCards>>52)==1) cards[4][1] = 2;
 }*/
 
-// h‚ª•\‚·è‚ğ”z—ñsubmitã‚ÉŠi”[‚·‚é
+// h???\???????z??submit???ÉŠi?[????
 void setSubmitCard(int submit[8][15], const Hand& h){
 	memset(submit,sizeof submit,0);
 	if(h.qty==0)return;//pass

@@ -1,9 +1,15 @@
 #include "mydef.h"
+#include <smmintrin.h>
 
 const Cards JOKER = (1LL<<52);
 const Cards SP3  = (1LL);
 
-int bitCount(Cards cards);
+inline int bitCount(Cards cards){
+	unsigned long low = cards;
+	unsigned long high= cards>>32;
+	return _mm_popcnt_u32(low)+_mm_popcnt_u32(high);
+
+}
 
 Cards setBit(ProtocolCards cards);
 

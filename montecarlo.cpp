@@ -107,7 +107,7 @@ Hand montecalroSearch(fieldInfo info,Cards myCards,Cards oppCards){
 		records.push_back(URecord(i));
 	}
 
-	for(int i=0;i<1000;i++){
+	for(int i=0;i<3000;i++){
 		auto ucb1_tuned = [=](URecord &a,URecord &b){
 			return a.ucb1_tuned(i)<b.ucb1_tuned(i);
 		};

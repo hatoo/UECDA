@@ -119,5 +119,6 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		cerr << "goal= " << bitCount(info.goal) << endl;
 		cerr << endl;
 	}
-	setSubmitCard(p,h.qty!=0?h:montecalroSearch(info,myCards,oppCards));
+	setSubmitCard(p,h.qty!=0?h:
+			(hs.size()==1?hs[0]:montecalroSearch(info,myCards,oppCards)));
 }
