@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
 #include "bitCard.h"
 #include "mydef.h"
 #include "handGenerator.h"
@@ -62,8 +63,67 @@ vector<Hand> getGroup_debug(Cards myCards,int num,int min_ord,
 	return res;
 }
 
-
 vector<Hand> getGroup(Cards myCards,int num,int min_ord,
+		bool rev,unsigned char suit,bool strict){
+	vector<Hand> res;
+	res.reserve(128);
+	const bool hasJoker = myCards&JOKER;
+	const Cards mask = rev?(1LL<<(4+min_ord*4))-1:((1LL<<((13-min_ord)*4))-1)<<(min_ord*4);
+	const int numMemo[][16]={
+		{15,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}, //個数 ,内容
+		{4,1,2,4,8},
+		{6,3,5,9,6,10,12},
+		{4,14,13,11,7},
+		{1,15}
+	};
+
+	if(myCards&mask)
+		for(int i=min_ord;i>=0&&i<13;rev?i--:i++){
+			Cards tmp = myCards >> (i*4);
+			if((tmp&0xF)==0)continue;
+			if(!rev&&tmp==0LL)break;
+			for(int k=0;k<numMemo[num][0];k++){
+				const int fourbit = numMemo[num][k+1];
+				const int count = bitCount(fourbit);
+				if(/*(suit==0||suit==fourbit)
+					&&*/(((tmp&fourbit)==fourbit)||(hasJoker&&(count>1)&&bitCount((tmp&fourbit)^fourbit)==1))
+					&&(suit==0||suit==fourbit)){
+					Hand h;
+					h.hands = (tmp&fourbit)<<(4*i);
+					h.qty=count;
+					h.seq=false;
+					h.ord = i;
+					h.suit=fourbit;
+					res.push_back(h);
+
+					if(strict&&(count>1)&&hasJoker&&((tmp&fourbit)==fourbit)){
+						vector<Hand> ij = insertJoker(h);
+						res.insert(res.end(),ij.begin(),ij.end());
+					}
+				}
+			}
+		}
+	if(hasJoker&&(num==0||num==1)){
+		Hand h;
+		h.hands = 0LL;
+		h.qty = 1;
+		h.seq = false;
+		h.ord = 13;
+		h.suit=0;
+		res.push_back(h);
+	}
+	/*
+	int truesize = getGroup_debug(myCards,num,min_ord,rev,suit,strict).size();
+	if(truesize!=res.size()){
+		cerr << dec << "getGroup error truesize= "<<truesize << " now= " << res.size() <<
+			" pred= " << (bool)(myCards&mask) << " min_ord= " << min_ord << " num= " << num << " rev= " << rev
+			<< " myCards = " << hex << myCards << " mask= " << mask<< endl;
+		exit(1);
+	}*/
+	return res;
+}
+
+vector<Hand> getGroup_old(Cards myCards,int num,int min_ord,
 		bool rev,unsigned char suit,bool strict){
 	const Cards allnum = (1LL << 52)-1;
 	vector<Hand> res;
