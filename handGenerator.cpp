@@ -257,9 +257,14 @@ vector<Hand> getAllValidHands(const fieldInfo& info,Cards myCards,bool strict){
 }
 /*
 void removeHands(vector<Hand>& hands,Crads submit,Cards myCards);
-
-vector<Hand> generateAllHands(int64 myCards);
-
+*/
+vector<Hand> generateAllHands(Cards myCards,bool strict){
+	auto res = getGroup(myCards,0,0,false,0,strict);
+	auto seq =   getSeq(myCards,0,0,false,0,strict);
+	res.insert(res.end(),seq.begin(),seq.end());
+	return res;
+}
+/*
 //void generateGroup(bitValidHandsArray *vha, int64 myCards);
 */
 //パス以外の行動を取れるか
@@ -314,3 +319,24 @@ bool checkAllValidHands(fieldInfo& info, Cards myCards){
 	return false;
 }
 
+vector<Hand> minHandPair(Cards c){
+	vector<Hand> res;
+	while(c){
+		auto hands = generateAllHands(c);
+		int index=0;
+		for(int i=0;i<hands.size();i++){
+			if(hands[index].qty<hands[i].qty)index=i;
+		}
+		res.push_back(hands[index]);
+		c = diffHand(c,hands[index]);
+	}
+	return res;
+}
+
+int minHandPairNum(Cards c){
+	int res = 0;
+	for(int i=0;i<13;i++){
+		if(c&(0xFLL << (4*i)))res++;
+	}
+	return res;
+}

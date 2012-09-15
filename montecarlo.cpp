@@ -17,6 +17,16 @@ Hand fastWeakAI(const fieldInfo &info,Cards myCards){
 	vector<Hand> hands = getAllValidHands(info,myCards);
 	int t=0;
 	if(hands.size()==1)return hands[0];
+	Hand pass;pass.qty=0;pass.hands=0LL;
+	const int turn = minHandPairNum(myCards);
+	for(int i=0;i<hands.size();i++){
+		Cards d = diffHand(myCards,hands[i]);
+		int newturn = minHandPairNum(d);
+		//if(hands[i].hands&&(0xFLL<<(4*5)))newturn--;
+		if(newturn<turn)return hands[i];
+	}
+	return pass;
+	/*
 	if(info.onset){
 		for(int i=0;i<hands.size();i++){
 			if(hands[i].qty>hands[t].qty 
@@ -29,8 +39,8 @@ Hand fastWeakAI(const fieldInfo &info,Cards myCards){
 					|| (hands[i].qty==hands[t].qty&&
 					Strength(hands[i].ord,info.rev)<Strength(hands[t].ord,info.rev)))t=i;
 		}
-	}
-	return hands[/*t];/*/randInt(0,hands.size()-1)];
+	}*/
+	return hands[/*t];/*/randInt(0,hands.size()-2)];
 }
 
 int playout(fieldInfo info,Hand h,Cards myCards,Cards oppCards){
@@ -89,6 +99,7 @@ Hand montecalroSearch(fieldInfo info,Cards myCards,Cards oppCards){
 
 	vector<Hand> vhs = getAllValidHands(info,myCards);
 	vector<URecord> records;
+	const double goalnum = bitCount(info.goal);
 
 	for(int i=0;i<vhs.size();i++){
 		records.push_back(URecord(i));
@@ -101,7 +112,6 @@ Hand montecalroSearch(fieldInfo info,Cards myCards,Cards oppCards){
 
 		auto maxelem = max_element(records.begin(),records.end(),ucb1_tuned);
 		double rank = playout(info,vhs[maxelem->tag],myCards,oppCards);
-		double goalnum = bitCount(info.goal);
 		if(goalnum==4)cerr << "104" << endl;
 		//double score[] = {1,0.75,0.5,0.25,0};
 		double score = 1.0-(rank-goalnum)/(4.0-goalnum);

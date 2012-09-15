@@ -115,7 +115,7 @@ int fieldInfo::simulate(const Hand &h,int pos){
 		cerr << "err " << endl;
 		dumpHand(h);
 	}*/
-	const Cards Eight = 0xF << 5;
+	const Cards Eight = 0xFLL << (5*4);
 	const int ALL = 0x1F;
 	submit(h);
 	if(h.qty==0){
