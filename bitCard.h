@@ -8,7 +8,10 @@ inline int bitCount(Cards cards){
 	unsigned long low = cards;
 	unsigned long high= cards>>32;
 	return _mm_popcnt_u32(low)+_mm_popcnt_u32(high);
+}
 
+inline int Strength(int ord,bool rev){
+	return rev?12-ord:ord;
 }
 
 Cards setBit(ProtocolCards cards);

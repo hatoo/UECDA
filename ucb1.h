@@ -48,7 +48,7 @@ double ucb1Record<T>::var2(){
 template<class T>
 double ucb1Record<T>::ucb1_tuned(int nf){
 	if(n==0)return INF_SCORE;
-	double c1 = min(0.25,var2()+sqrt(2*log(nf)/n));
+	double c1 = min(0.25,var2()+sqrt(2.0*log(nf)/n));
 	double x1 = x() + sqrt(c1*log((double)nf)/n);
 	return x1;
 }
@@ -56,5 +56,5 @@ double ucb1Record<T>::ucb1_tuned(int nf){
 template<class T>
 double ucb1Record<T>::ucb1(int nf){
 	if(n==0)return INF_SCORE;
-	return x()+sqrt(2*log((double)nf)/n);
+	return x()+sqrt(2.0*log((double)nf)/n);
 }

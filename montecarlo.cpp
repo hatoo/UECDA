@@ -16,51 +16,38 @@ using namespace std;
 Hand fastWeakAI(const fieldInfo &info,Cards myCards){
 	vector<Hand> hands = getAllValidHands(info,myCards);
 	int t=0;
-	for(int i=0;i<hands.size();i++){
-		if(hands[i].qty>hands[t].qty)t=i;
+	if(hands.size()==1)return hands[0];
+	if(info.onset){
+		for(int i=0;i<hands.size();i++){
+			if(hands[i].qty>hands[t].qty 
+					|| (hands[i].qty==hands[t].qty&&
+					Strength(hands[i].ord,info.rev)<Strength(hands[t].ord,info.rev)))t=i;
+		}
+	}else{
+		for(int i=0;i<hands.size();i++){
+			if(hands[i].qty!=0 && hands[i].ord<hands[t].ord
+					|| (hands[i].qty==hands[t].qty&&
+					Strength(hands[i].ord,info.rev)<Strength(hands[t].ord,info.rev)))t=i;
+		}
 	}
-	return hands[randInt(0,hands.size()-1)];
+	return hands[/*t];/*/randInt(0,hands.size()-1)];
 }
 
 int playout(fieldInfo info,Hand h,Cards myCards,Cards oppCards){
 	int pos = info.mypos;
 	Hand hand = h;
 	Cards hands[5]={0};
-	//
-	int total=0;
-	for(int i=0;i<5;i++){
-		if(i!=info.mypos){
-			total+=info.lest[i];
-		}
-	}
-	if(total!=bitCount(oppCards)){
-		cerr << "playout error" << endl;
-		return 0;
-	}
-	//cerr << "here" << endl;
-	//
 	DevideCards(info,oppCards,hands);
-	int t2=0;
-	for(int i=0;i<5;i++){
-		t2+=bitCount(hands[i]);
-	}
-	if(t2!=total || info.lest[info.mypos]!=bitCount(myCards)){cerr<<"playout error2" << endl;}
-	//cerr << "here2" << endl;
+	
 	hands[info.mypos]=myCards;
-	/*for(int i=0;i<5;i++){
+	for(int i=0;i<5;i++){
 		if(info.lest[i]==0)info.goal|=(1<<i);
-	}*/
-	int rid = randInt(1,10000);
+	}
+
 	while(!(info.goal&(1<<info.mypos)) && ((info.goal|(1<<info.mypos))!=0x1F)){
-		Cards cpy = hands[pos];
+		//Cards cpy = hands[pos];
 		hands[pos]=diffHand(hands[pos],hand);
-		//cerr <<"id=" << rid << " pos= " << pos << " lest= " << info.lest[pos] << " handlest= " << bitCount(hands[pos]) << " goal= " << info.goal << " pass= " << info.pass<< endl;
-		int t=pos;
 		pos = info.simulate(hand,pos);
-		if(hands[pos]==0){
-			cerr << "err pos= " <<pos << " lest= " << info.lest[pos] << " goal= " << info.goal << " pass= " << info.pass << endl;
-			cerr << "t= " << t << " lest= " << info.lest[t] << " " << hands[t]<< endl;
-		}
 		if(hands[pos])
 		hand = fastWeakAI(info,hands[pos]);
 	}
@@ -113,9 +100,12 @@ Hand montecalroSearch(fieldInfo info,Cards myCards,Cards oppCards){
 		};
 
 		auto maxelem = max_element(records.begin(),records.end(),ucb1_tuned);
-		int rank = playout(info,vhs[maxelem->tag],myCards,oppCards);
-		double score[] = {1,0.75,0.5,0.25,0};
-		maxelem->pushScore(score[rank]);
+		double rank = playout(info,vhs[maxelem->tag],myCards,oppCards);
+		double goalnum = bitCount(info.goal);
+		if(goalnum==4)cerr << "104" << endl;
+		//double score[] = {1,0.75,0.5,0.25,0};
+		double score = 1.0-(rank-goalnum)/(4.0-goalnum);
+		maxelem->pushScore(score);
 	}
 	auto cmp = [](URecord &a,URecord &b){
 		return a.x()<b.x();

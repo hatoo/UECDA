@@ -14,8 +14,8 @@ using namespace std;
 int count=0;
 int mcount =0;
 
-void removeHands(vector<Hand> &hands,Hand){
-}
+/*void removeHands(vector<Hand> &hands,Hand){
+}*/
 
 bool isWIN(fieldInfo info,Cards myCards,Cards oppCards,int maxHandNum,set<Cards>& failed){
 	if(failed.find(myCards)!=failed.end())return false;
@@ -67,7 +67,7 @@ Hand winHand(fieldInfo info,Cards myCards,Cards oppCards,int maxHandNum){
 }
 
 void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
-	vector<Hand> hs=getAllValidHands(info,myCards);
+	//vector<Hand> hs=getAllValidHands(info,myCards);
 	/*int idx=0;
 	for(int i=0;i<hs.size();i++){
 		if(info.onset&&hs[i].qty>hs[idx].qty)idx=i;
@@ -93,12 +93,12 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		}
 	}
 	Hand h = winHand(info,myCards,oppCards,maxHandNum);
+	/*
 	if(count > mcount){
-		/*
 		cerr << "count= " << count << endl;
 		dumpCards(myCards);
 		dumpCards(oppCards);
-		mcount=count;*/
+		mcount=count;
 	}
 	if(h.qty>100){
 		cerr << "isWin is true" << endl;
@@ -109,16 +109,18 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		cerr << "hand= " << endl;
 		dumpHand(h);
 		cerr << endl;
-	}
+	}*/
 	//Cards out[5];
 	//DevideCards(info,oppCards,out);
+	/*
 	int o = playout(info,hs.back(),myCards,oppCards);
 	if(h.qty>0 && o!=bitCount(info.goal)){
 		cerr << "qty= " << (int)h.qty << endl;
 		cerr << "o= " << o << endl;
 		cerr << "goal= " << bitCount(info.goal) << endl;
 		cerr << endl;
-	}
+	}*/
+	Hand pass;pass.qty=0;
 	setSubmitCard(p,h.qty!=0?h:
-			(hs.size()==1?hs[0]:montecalroSearch(info,myCards,oppCards)));
+			(!checkAllValidHands(info,myCards)?pass:montecalroSearch(info,myCards,oppCards)));
 }
