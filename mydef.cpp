@@ -89,11 +89,15 @@ bool fieldInfo::SingleJoker(){
 
 void fieldInfo::submit(const Hand &h){
 	if(h.qty==0)return;//pass
+	if(ord==(rev?-1:13)&&h.qty==1&&h.hands==SP3){
+		ord=(rev?-1:13);
+	}else{
+		ord=h.ord;
+	}
 	lock = !onset&&suit==h.suit;
 	onset=false;
 	qty=h.qty;
 	suit=h.suit;
-	ord=h.ord;
 	seq=h.seq;
 	if((h.seq&&h.qty>=5)||(!h.seq&&h.qty>=4)){
 		rev=!rev;

@@ -333,10 +333,28 @@ vector<Hand> minHandPair(Cards c){
 	return res;
 }
 
-int minHandPairNum(Cards c){
-	int res = 0;
+int minHandPairNum_Group(Cards c){
+	int res= 0;
 	for(int i=0;i<13;i++){
 		if(c&(0xFLL << (4*i)))res++;
 	}
 	return res;
+
+}
+
+int minHandPairNum(Cards c){//不完全な実装
+	const Cards seqs[] = {0x111,0x222,0x444,0x888};
+	int simple = minHandPairNum_Group(c);
+	int seq = 0;
+	
+	for(int i=0;i<11;i++){
+		for(int k=0;k<4;k++){
+			Cards tmp = seqs[k] << (4*i);
+			if((c&tmp)==tmp){
+				c^=tmp;
+				seq++;
+			}
+		}
+	}
+	return min(simple,minHandPairNum_Group(c)+seq);
 }

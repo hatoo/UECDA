@@ -13,20 +13,28 @@
 
 using namespace std;
 
-Hand fastWeakAI(const fieldInfo &info,Cards myCards){
+Hand fastWeakAI(const fieldInfo &info,Cards myCards,Cards oppCards){
 	vector<Hand> hands = getAllValidHands(info,myCards);
 	int t=0;
+	int index=0;
 	if(hands.size()==1)return hands[0];
 	Hand pass;pass.qty=0;pass.hands=0LL;
-	const int turn = minHandPairNum(myCards);
+	/*
+	int turn = minHandPairNum(myCards);
 	for(int i=0;i<hands.size();i++){
+		fieldInfo t = info;
+		t.submit(hands[i]);
 		Cards d = diffHand(myCards,hands[i]);
 		int newturn = minHandPairNum(d);
-		//if(hands[i].hands&&(0xFLL<<(4*5)))newturn--;
-		if(newturn<turn)return hands[i];
+		if(hands[i].hands&&(0xFLL<<(4*5))
+				|| !checkAllValidHands(t,oppCards))newturn--;
+		if(newturn<turn){
+			turn = newturn;
+			index=i;
+		}
 	}
-	return pass;
-	/*
+	return hands[index];*/
+	
 	if(info.onset){
 		for(int i=0;i<hands.size();i++){
 			if(hands[i].qty>hands[t].qty 
@@ -35,12 +43,14 @@ Hand fastWeakAI(const fieldInfo &info,Cards myCards){
 		}
 	}else{
 		for(int i=0;i<hands.size();i++){
+			if(hands[i].hands & (0xFLL<<20))return hands[i];
+			if(hands[i].suit == info.suit)return hands[i];
 			if(hands[i].qty!=0 && hands[i].ord<hands[t].ord
 					|| (hands[i].qty==hands[t].qty&&
 					Strength(hands[i].ord,info.rev)<Strength(hands[t].ord,info.rev)))t=i;
 		}
-	}*/
-	return hands[/*t];/*/randInt(0,hands.size()-2)];
+	}
+	return hands[t];/*/randInt(0,hands.size()-2)];*/
 }
 
 int playout(fieldInfo info,Hand h,Cards myCards,Cards oppCards){
@@ -57,9 +67,10 @@ int playout(fieldInfo info,Hand h,Cards myCards,Cards oppCards){
 	while(!(info.goal&(1<<info.mypos)) && ((info.goal|(1<<info.mypos))!=0x1F)){
 		//Cards cpy = hands[pos];
 		hands[pos]=diffHand(hands[pos],hand);
+		oppCards = diffHand(oppCards,hand);
 		pos = info.simulate(hand,pos);
 		if(hands[pos])
-		hand = fastWeakAI(info,hands[pos]);
+		hand = fastWeakAI(info,hands[pos],oppCards^hands[pos]);
 	}
 	int count = bitCount(info.goal);
 	return info.goal&(1<<info.mypos)?count-1:count;

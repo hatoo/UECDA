@@ -121,6 +121,9 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		cerr << endl;
 	}*/
 	Hand pass;pass.qty=0;
+	//setSubmitCard(p,fastWeakAI(info,myCards,oppCards));
+	//*
 	setSubmitCard(p,h.qty!=0?h:
 			(!checkAllValidHands(info,myCards)?pass:montecalroSearch(info,myCards,oppCards)));
+	// */
 }
