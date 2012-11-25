@@ -7,7 +7,6 @@
 #include "handGenerator.h"
 
 using namespace std;
-//Cards == int64
 
 vector<Hand> insertJoker(Hand h){
 	vector<Hand> res;
@@ -24,7 +23,6 @@ vector<Hand> insertJoker(Hand h){
 
 vector<Hand> getGroup_debug(Cards myCards,int num,int min_ord,
 		bool rev,unsigned char suit,bool strict){
-	const Cards allnum = (1LL << 52)-1;
 	vector<Hand> res;
 	res.reserve(128);
 	bool joker = myCards&JOKER;
@@ -63,16 +61,12 @@ vector<Hand> getGroup_debug(Cards myCards,int num,int min_ord,
 	return res;
 }
 
-inline Cards MASK(int ord,bool rev){//ordよりも強いカードの集合
-	return rev?(1LL<<(4+ord*4))-1:((1LL<<((13-ord)*4))-1)<<(ord*4);
-}
-
 vector<Hand> getGroup(Cards myCards,int num,int min_ord,
 		bool rev,unsigned char suit,bool strict){
 	vector<Hand> res;
 	res.reserve(128);
 	const bool hasJoker = myCards&JOKER;
-	const Cards mask = MASK(min_ord,rev);//rev?(1LL<<(4+min_ord*4))-1:((1LL<<((13-min_ord)*4))-1)<<(min_ord*4);
+	const Cards mask = MASK(min_ord,rev);
 	const int numMemo[][16]={
 		{15,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}, //個数 ,内容
 		{4,1,2,4,8},
@@ -89,8 +83,8 @@ vector<Hand> getGroup(Cards myCards,int num,int min_ord,
 			for(int k=0;k<numMemo[num][0];k++){
 				const int fourbit = numMemo[num][k+1];
 				const int count = bitCount(fourbit);
-				if(/*(suit==0||suit==fourbit)
-					&&*/(((tmp&fourbit)==fourbit)||(hasJoker&&(count>1)&&bitCount((tmp&fourbit)^fourbit)==1))
+				if((((tmp&fourbit)==fourbit)||(hasJoker&&(count>1)
+								&&bitCount((tmp&fourbit)^fourbit)==1))
 					&&(suit==0||suit==fourbit)){
 					Hand h;
 					h.hands = (tmp&fourbit)<<(4*i);
@@ -116,14 +110,7 @@ vector<Hand> getGroup(Cards myCards,int num,int min_ord,
 		h.suit=0;
 		res.push_back(h);
 	}
-	/*
-	int truesize = getGroup_debug(myCards,num,min_ord,rev,suit,strict).size();
-	if(truesize!=res.size()){
-		cerr << dec << "getGroup error truesize= "<<truesize << " now= " << res.size() <<
-			" pred= " << (bool)(myCards&mask) << " min_ord= " << min_ord << " num= " << num << " rev= " << rev
-			<< " myCards = " << hex << myCards << " mask= " << mask<< endl;
-		exit(1);
-	}*/
+
 	return res;
 }
 
@@ -268,7 +255,7 @@ vector<Hand> generateAllHands(Cards myCards,bool strict){
 //void generateGroup(bitValidHandsArray *vha, int64 myCards);
 */
 //パス以外の行動を取れるか
-bool checkAllValidHands(fieldInfo& info, Cards myCards){
+bool checkAllValidHands(const fieldInfo& info, Cards myCards){
 	if(info.onset)return true;
 	if(info.qty==1&&(myCards&JOKER))return true;
 	//スペ3
@@ -357,4 +344,73 @@ int minHandPairNum(Cards c){//不完全な実装
 		}
 	}
 	return min(simple,minHandPairNum_Group(c)+seq);
+}
+
+inline bool checkSeq(Cards myCards){
+	Cards suits[]={
+		0x1111111111111uLL,
+		0x2222222222222uLL,
+		0x4444444444444uLL,
+		0x8888888888888uLL,
+	};
+	for(int i=0;i<4;i++){
+		if(bitCount(myCards&suits[i])>=3)return true;
+	}
+	return false;
+}
+
+vector<Hand> getOnsetHands(Cards myCards){
+	const bool hasjoker = myCards&JOKER;
+	std::vector<Hand> res;
+	if(hasjoker || checkSeq(myCards))res=getSeq(myCards);
+	res.reserve(res.size()+14);
+
+	for(int i=0;i<13;i++){
+		Cards c = myCards&(0xFLL<<(4*i));
+		if((myCards>>(4*i)) ==0)break;
+		if(c!=0LL){
+			const int count = bitCount(c);
+			const int suit  = c>>(4*i);
+			Hand h;
+			h.hands = c;
+			h.qty = count;
+			h.ord = i;
+			h.seq = false;
+			h.suit = suit;
+			res.push_back(h);
+
+			if(hasjoker&&count<4){
+				for(int i=0;i<4;i++){
+					if((suit&(1<<i))==0){
+						Hand h;
+						h.hands = c;
+						h.qty=count+1;
+						h.ord=i;
+						h.seq=false;
+						h.suit = suit|(1<<i);
+						res.push_back(h);
+						break;
+					}
+				}
+			}
+		}
+	}
+	if(myCards&JOKER){
+		Hand h;
+		h.hands = 0LL;
+		h.qty=1;
+		h.ord=13;
+		h.seq=false;
+		h.suit=0;
+		res.push_back(h);
+	}
+	return res;
+}
+
+bool isBecomeOnset(fieldInfo info,const Hand &h,Cards oppCards){
+	const int handnum = info.maxOppHandNum();
+	info.simulate(h,info.mypos);
+	if(info.onset)return true;
+	if(handnum<h.qty)return true;
+	return !checkAllValidHands(info,oppCards);
 }

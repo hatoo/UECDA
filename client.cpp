@@ -2,83 +2,129 @@
 // indent -kr -ts4 
 #include <iostream>
 #include <stdio.h>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "daihinmin.h"
+//#include "daihinmin.h"
 #include "connection.h"
 #include "mydef.h"
 #include "cardChange.h"
 #include "bitCard.h"
 #include "cardSelect.h"
 #include "myrandom.h"
+#include "machineLearn.h"
+#include "ml3.h"
+#include "mldefine2012.h"
+#include "mldefine10.h"
+#include "mldefine5.h"
+
+
 using namespace std;
-const int g_logging = 0;		// ƒƒOæ‚è‚ğ‚·‚é‚©”Û‚©‚ğ”»’è‚·‚é‚½‚ß‚Ì•Ï”
+const int g_logging = 0;		// ãƒ­ã‚°å–ã‚Šã‚’ã™ã‚‹ã‹å¦ã‹ã‚’åˆ¤å®šã™ã‚‹ãŸã‚ã®å¤‰æ•°
 
 int main(int argc, char *argv[])
 {
+	MLdefine2012 mld2012;
+	MLdefine10 mld10;
+	MLdefine5  mld5;
+	setMLdefine(&mld2012);
+	string fname="1013.dat";
+	int ch;
+	while((ch=getopt(argc, argv,"v:ft:"))!= -1){
+		switch(ch){
+			case 't':
+				if(strcmp("mld2012",optarg)==0){
+					cout << optarg << endl;
+					setMLdefine(&mld2012);
+				}
+				if(strcmp("mld10",optarg)==0){
+					cout << optarg << endl;
+					setMLdefine(&mld10);
+				}
+				if(strcmp("mld5",optarg)==0){
+					cout << optarg << endl;
+					setMLdefine(&mld5);
+				}
 
-	int my_playernum;			// ƒvƒŒƒCƒ„[”Ô†‚ğ‹L‰¯‚·‚é
-	int whole_gameend_flag = 0;	// ‘SƒQ[ƒ€‚ªI—¹‚µ‚½‚©”Û‚©‚ğ”»•Ê‚·‚é•Ï”
-	int one_gameend_flag = 0;	// 1ƒQ[ƒ€‚ªI‚í‚Á‚½‚©”Û‚©‚ğ”»•Ê‚·‚é•Ï”
-	int accept_flag = 0;		// ’ño‚µ‚½ƒJ[ƒh‚ªó—‚³‚ê‚½‚©‚ğ”»•Ê‚·‚é•Ï”
-	int game_count = 0;			// ƒQ[ƒ€‚Ì‰ñ”‚ğ‹L‰¯‚·‚é
+				break;
+			case 'v':
+				setMode(MLAI);
+				fname = optarg;
+				cerr << fname << endl;
+				break;
+			case 'f':
+				setMode(FWAI);
+				break;
+			default:
+				break;
+		}
+	}
+	int my_playernum;			// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ç•ªå·ã‚’è¨˜æ†¶ã™ã‚‹
+	int whole_gameend_flag = 0;	// å…¨ã‚²ãƒ¼ãƒ ãŒçµ‚äº†ã—ãŸã‹å¦ã‹ã‚’åˆ¤åˆ¥ã™ã‚‹å¤‰æ•°
+	int one_gameend_flag = 0;	// 1ã‚²ãƒ¼ãƒ ãŒçµ‚ã‚ã£ãŸã‹å¦ã‹ã‚’åˆ¤åˆ¥ã™ã‚‹å¤‰æ•°
+	int accept_flag = 0;		// æå‡ºã—ãŸã‚«ãƒ¼ãƒ‰ãŒå—ç†ã•ã‚ŒãŸã‹ã‚’åˆ¤åˆ¥ã™ã‚‹å¤‰æ•°
+	int game_count = 0;			// ã‚²ãƒ¼ãƒ ã®å›æ•°ã‚’è¨˜æ†¶ã™ã‚‹
 
-	int own_cards[8][15];		// ‘€ì—p‚ÌèD‚Ìƒe[ƒuƒ‹
-	int ba_cards[8][15];		// ‘€ì—p‚Ìê‚ÌD‚Ìƒe[ƒuƒ‹
+	int own_cards[8][15];		// æ“ä½œç”¨ã®æ‰‹æœ­ã®ãƒ†ãƒ¼ãƒ–ãƒ«
+	int ba_cards[8][15];		// æ“ä½œç”¨ã®å ´ã®æœ­ã®ãƒ†ãƒ¼ãƒ–ãƒ«
 
 	changeInfo cinfo;
 	fieldInfo finfo;
 	Cards oppCards=0;
-	// ˆø”‚Ìƒ`ƒFƒbƒN
-	// ˆø”‚É]‚Á‚ÄƒT[ƒoƒAƒhƒŒƒXAÚ‘±ƒ|[ƒgAƒNƒ‰ƒCƒAƒ“ƒg–¼‚ğ•ÏX
+	Cards beforeCards;
+	// å¼•æ•°ã®ãƒã‚§ãƒƒã‚¯
+	// å¼•æ•°ã«å¾“ã£ã¦ã‚µãƒ¼ãƒã‚¢ãƒ‰ãƒ¬ã‚¹ã€æ¥ç¶šãƒãƒ¼ãƒˆã€ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆåã‚’å¤‰æ›´
 	checkArg(argc, argv);
 
-	// ƒQ[ƒ€‚ÉQ‰Á
+	// ã‚²ãƒ¼ãƒ ã«å‚åŠ 
 	my_playernum = entryToGame();
 
 	initRand();
+	
+	initmlAI3(fname.c_str());
+	//initmlAI(fname.c_str());
 
 	while (whole_gameend_flag == 0) {
 		bool game_begin=true;
 
-		one_gameend_flag = 0;	// 1ƒQ[ƒ€‚ªI‚í‚Á‚½–‚ğ¦‚·ƒtƒ‰ƒO‚ğ‰Šú‰»
+		one_gameend_flag = 0;	// 1ã‚²ãƒ¼ãƒ ãŒçµ‚ã‚ã£ãŸäº‹ã‚’ç¤ºã™ãƒ•ãƒ©ã‚°ã‚’åˆæœŸåŒ–
 
-		game_count = startGame(own_cards);	// ƒ‰ƒEƒ“ƒh‚ğn‚ß‚é
-		// Å‰‚ÌƒJ[ƒh‚ğó‚¯æ‚éB
-		// /ƒJ[ƒhŒğŠ·
-		if (own_cards[5][0] == 0) {	// ƒJ[ƒhŒğŠ·ƒtƒ‰ƒO‚ğƒ`ƒFƒbƒN
-			// ==1‚Å³í
-			printf("not card-change turn?\n");
+		game_count = startGame(own_cards);	// ãƒ©ã‚¦ãƒ³ãƒ‰ã‚’å§‹ã‚ã‚‹
+		beforeCards = setBit(own_cards);
+		// æœ€åˆã®ã‚«ãƒ¼ãƒ‰ã‚’å—ã‘å–ã‚‹ã€‚
+		// /ã‚«ãƒ¼ãƒ‰äº¤æ›
+		if (own_cards[5][0] == 0) {	// ã‚«ãƒ¼ãƒ‰äº¤æ›æ™‚ãƒ•ãƒ©ã‚°ã‚’ãƒã‚§ãƒƒã‚¯
+			// ==1ã§æ­£å¸¸
+			printf("not card-change turn?Â¥n");
 			exit(1);
-		} else {				// ƒe[ƒuƒ‹‚É–â‘è‚ª–³‚¯‚ê‚ÎÀÛ‚ÉŒğŠ·‚Ö
+		} else {				// ãƒ†ãƒ¼ãƒ–ãƒ«ã«å•é¡ŒãŒç„¡ã‘ã‚Œã°å®Ÿéš›ã«äº¤æ›ã¸
 			if (own_cards[5][1] > 0 && own_cards[5][1] < 100) {
-				int change_qty = own_cards[5][1];	// ƒJ[ƒh‚ÌŒğŠ·–‡”
-				int select_cards[8][15] = { {0} };	// ‘I‚ñ‚¾ƒJ[ƒh‚ğŠi”[
+				int change_qty = own_cards[5][1];	// ã‚«ãƒ¼ãƒ‰ã®äº¤æ›æšæ•°
+				int select_cards[8][15] = { {0} };	// é¸ã‚“ã ã‚«ãƒ¼ãƒ‰ã‚’æ ¼ç´
 
-				// ©•ª‚ª•x‹A‘å•x‹‚Å‚ ‚ê‚Î•s—v‚ÈƒJ[ƒh‚ğ‘I‚Ño‚·
+				// è‡ªåˆ†ãŒå¯Œè±ªã€å¤§å¯Œè±ªã§ã‚ã‚Œã°ä¸è¦ãªã‚«ãƒ¼ãƒ‰ã‚’é¸ã³å‡ºã™
 
 				// ///////////////////////////////////////////////////////////
-				// ƒJ[ƒhŒğŠ·‚ÌƒAƒ‹ƒSƒŠƒYƒ€‚Í‚±‚±‚É‘‚­
+				// ã‚«ãƒ¼ãƒ‰äº¤æ›ã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¯ã“ã“ã«æ›¸ã
 				// ///////////////////////////////////////////////////////////
-
 				//change(select_cards, own_cards, change_qty);
 				checkCards(select_cards, own_cards, change_qty);
 
 				// ///////////////////////////////////////////////////////////
-				// ƒJ[ƒhŒğŠ·‚ÌƒAƒ‹ƒSƒŠƒYƒ€ ‚±‚±‚Ü‚Å
+				// ã‚«ãƒ¼ãƒ‰äº¤æ›ã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ  ã“ã“ã¾ã§
 				// ///////////////////////////////////////////////////////////
 
-				// ‘I‚ñ‚¾ƒJ[ƒh‚ğ‘—M
+				// é¸ã‚“ã ã‚«ãƒ¼ãƒ‰ã‚’é€ä¿¡
 				sendChangingCards(select_cards);
 			} else {
-				// ©•ª‚ª•½–¯ˆÈ‰º‚È‚çA‰½‚©‚·‚é•K—v‚Í‚È‚¢
+				// è‡ªåˆ†ãŒå¹³æ°‘ä»¥ä¸‹ãªã‚‰ã€ä½•ã‹ã™ã‚‹å¿…è¦ã¯ãªã„
 
 			}
-		}						// ƒJ[ƒhŒğŠ·‚±‚±‚Ü‚Å
+		}						// ã‚«ãƒ¼ãƒ‰äº¤æ›ã“ã“ã¾ã§
 
-		while (one_gameend_flag == 0) {	// 1ƒQ[ƒ€‚ªI‚í‚é‚Ü‚Å‚ÌŒJ‚è•Ô‚µ
+		while (one_gameend_flag == 0) {	// 1ã‚²ãƒ¼ãƒ ãŒçµ‚ã‚ã‚‹ã¾ã§ã®ç¹°ã‚Šè¿”ã—
 			bool is_my_turn = receiveCards(own_cards);
 
 			if(game_begin){
@@ -87,43 +133,45 @@ int main(int argc, char *argv[])
 				finfo.goal=0;
 				const Cards allCards = (1LL << 53) -1;
 				const Cards myCards = setBit(own_cards);
+				finfo.set(my_playernum,own_cards);
+				cinfo.set(beforeCards,myCards,finfo);
 				oppCards = allCards^myCards;
 			}
 
-			int select_cards[8][15] = { {0} };	// ’ño—p‚Ìƒe[ƒuƒ‹
+			int select_cards[8][15] = { {0} };	// æå‡ºç”¨ã®ãƒ†ãƒ¼ãƒ–ãƒ«
 			finfo.set(my_playernum, own_cards);
 
-			if (is_my_turn) {	// ƒJ[ƒh‚ğown_cards‚Éó‚¯æ‚è
-				// ê‚ğó‘Ô‚Ì“Ç‚İo‚µ
-				// ©•ª‚Ìƒ^[ƒ“‚Å‚ ‚é‚©‚ğŠm”F‚·‚é
-				// ©•ª‚Ìƒ^[ƒ“‚Å‚ ‚ê‚Î‚±‚ÌƒuƒƒbƒN‚ªÀs‚³‚ê‚éB
-				clearCards(select_cards);	// ‘I‚ñ‚¾ƒJ[ƒh‚ÌƒNƒŠƒA
+			if (is_my_turn) {	// ã‚«ãƒ¼ãƒ‰ã‚’own_cardsã«å—ã‘å–ã‚Š
+				// å ´ã‚’çŠ¶æ…‹ã®èª­ã¿å‡ºã—
+				// è‡ªåˆ†ã®ã‚¿ãƒ¼ãƒ³ã§ã‚ã‚‹ã‹ã‚’ç¢ºèªã™ã‚‹
+				// è‡ªåˆ†ã®ã‚¿ãƒ¼ãƒ³ã§ã‚ã‚Œã°ã“ã®ãƒ–ãƒ­ãƒƒã‚¯ãŒå®Ÿè¡Œã•ã‚Œã‚‹ã€‚
+				clearCards(select_cards);	// é¸ã‚“ã ã‚«ãƒ¼ãƒ‰ã®ã‚¯ãƒªã‚¢
 				Cards myCards=setBit(own_cards);
 				//finfo.onset=state.onset;
-				selectHand(select_cards,finfo,myCards,oppCards);
+				selectHand(select_cards,finfo,myCards,oppCards,cinfo);
 				/*
 				// ///////////////////////////////////////////////////////////
-				// ƒAƒ‹ƒSƒŠƒYƒ€‚±‚±‚©‚ç
-				// ‚Ç‚ÌƒJ[ƒh‚ğo‚·‚©‚Í‚±‚±‚É‚©‚­
+				// ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã“ã“ã‹ã‚‰
+				// ã©ã®ã‚«ãƒ¼ãƒ‰ã‚’å‡ºã™ã‹ã¯ã“ã“ã«ã‹ã
 				// ///////////////////////////////////////////////////////////
-				if (state.onset == 1) {	// ê‚ÉƒJ[ƒh‚ª–³‚¢‚Æ‚«
+				if (state.onset == 1) {	// å ´ã«ã‚«ãƒ¼ãƒ‰ãŒç„¡ã„ã¨ã
 					if (state.rev == 0) {
-						lead(select_cards, own_cards);	// ’Êí‚Ì’ño—p
+						lead(select_cards, own_cards);	// é€šå¸¸æ™‚ã®æå‡ºç”¨
 					} else {
-						leadRev(select_cards, own_cards);	// Šv–½‚Ì’ño—p
+						leadRev(select_cards, own_cards);	// é©å‘½æ™‚ã®æå‡ºç”¨
 					}
-				} else {		// ‚·‚Å‚Éê‚ÉƒJ[ƒh‚ª‚ ‚é‚Æ‚«
+				} else {		// ã™ã§ã«å ´ã«ã‚«ãƒ¼ãƒ‰ãŒã‚ã‚‹ã¨ã
 					if (state.rev == 0) {
-						follow(select_cards, own_cards);	// ’Êí‚Ì’ño—p 
+						follow(select_cards, own_cards);	// é€šå¸¸æ™‚ã®æå‡ºç”¨ 
 						// 
 					} else {
-						followRev(select_cards, own_cards);	// Šv–½‚Ì’ño—p
+						followRev(select_cards, own_cards);	// é©å‘½æ™‚ã®æå‡ºç”¨
 					}
 				}*/
 				// ///////////////////////////////////////////////////////////
-				// ƒAƒ‹ƒSƒŠƒYƒ€‚Í‚±‚±‚Ü‚Å
+				// ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¯ã“ã“ã¾ã§
 				// ///////////////////////////////////////////////////////////
-				accept_flag = sendCards(select_cards);	// cards‚ğ’ño
+				accept_flag = sendCards(select_cards);	// cardsã‚’æå‡º
 				//cout << "frag= " << accept_flag << endl;
 				if(accept_flag==8){
 					bool f=false;
@@ -133,7 +181,7 @@ int main(int argc, char *argv[])
 						}
 					}
 					if(f){
-					showState(&state);
+					//showState(&state);
 					cerr << "error!!!" << endl;
 					cerr << "onset= "<< (int)finfo.onset << endl;
 					cerr << "qty= " << (int)finfo.qty << endl;
@@ -161,15 +209,15 @@ int main(int argc, char *argv[])
 					}
 				}
 			} else {
-				// ©•ª‚Ìƒ^[ƒ“‚Å‚Í‚È‚¢
-				// •K—v‚È‚ç‚±‚±‚Éˆ—‚ğ‹Lq‚·‚é
+				// è‡ªåˆ†ã®ã‚¿ãƒ¼ãƒ³ã§ã¯ãªã„æ™‚
+				// å¿…è¦ãªã‚‰ã“ã“ã«å‡¦ç†ã‚’è¨˜è¿°ã™ã‚‹
 			}
 
 
 
-			// ‚»‚Ìƒ^[ƒ“‚É’ño‚³‚ê‚½Œ‹‰Ê‚Ìƒe[ƒuƒ‹ó‚¯æ‚è,ê‚Éo‚½ƒJ[ƒh‚Ìî•ñ‚ğ‰ğÍ‚·‚é
+			// ãã®ã‚¿ãƒ¼ãƒ³ã«æå‡ºã•ã‚ŒãŸçµæœã®ãƒ†ãƒ¼ãƒ–ãƒ«å—ã‘å–ã‚Š,å ´ã«å‡ºãŸã‚«ãƒ¼ãƒ‰ã®æƒ…å ±ã‚’è§£æã™ã‚‹
 			lookField(ba_cards);
-			//Å‰‚És“®‚µ‚½ƒvƒŒƒCƒ„
+			//æœ€åˆã«è¡Œå‹•ã—ãŸãƒ—ãƒ¬ã‚¤ãƒ¤
 			if(cinfo.firstPlayer == -1){
 				cinfo.firstPlayer = finfo.seat[ba_cards[5][3]];
 			}
@@ -177,41 +225,41 @@ int main(int argc, char *argv[])
 			oppCards ^= (oppCards&setBit(ba_cards));
 
 			// /////////////////////////////////////////////////////////////
-			// ƒJ[ƒh‚ªo‚³‚ê‚½‚ ‚Æ ’N‚©‚ªƒJ[ƒh‚ğo‚·‘O‚Ìˆ—‚Í‚±‚±‚É‘‚­
+			// ã‚«ãƒ¼ãƒ‰ãŒå‡ºã•ã‚ŒãŸã‚ã¨ èª°ã‹ãŒã‚«ãƒ¼ãƒ‰ã‚’å‡ºã™å‰ã®å‡¦ç†ã¯ã“ã“ã«æ›¸ã
 			// /////////////////////////////////////////////////////////////
 
 
 			// /////////////////////////////////////////////////////////////
-			// ‚±‚±‚Ü‚Å
+			// ã“ã“ã¾ã§
 			// /////////////////////////////////////////////////////////////
 
-			// ˆê‰ñ‚ÌƒQ[ƒ€‚ªI‚í‚Á‚½‚©”Û‚©‚Ì’Ê’m‚ğƒT[ƒo‚©‚ç‚¤‚¯‚éB
+			// ä¸€å›ã®ã‚²ãƒ¼ãƒ ãŒçµ‚ã‚ã£ãŸã‹å¦ã‹ã®é€šçŸ¥ã‚’ã‚µãƒ¼ãƒã‹ã‚‰ã†ã‘ã‚‹ã€‚
 			switch (beGameEnd()) {
-			case 0:			// 0‚Ì‚Æ‚«ƒQ[ƒ€‚ğ‘±‚¯‚é
+			case 0:			// 0ã®ã¨ãã‚²ãƒ¼ãƒ ã‚’ç¶šã‘ã‚‹
 				one_gameend_flag = 0;
 				whole_gameend_flag = 0;
 				break;
-			case 1:			// 1‚Ì‚Æ‚« 1ƒQ[ƒ€‚ÌI—¹
+			case 1:			// 1ã®ã¨ã 1ã‚²ãƒ¼ãƒ ã®çµ‚äº†
 				one_gameend_flag = 1;
 				whole_gameend_flag = 0;
 				if (g_logging == 1) {
-					printf("game #%d was finished.\n", game_count);
+					printf("game #%d was finished.Â¥n", game_count);
 				}
 				break;
-			default:			// ‚»‚Ì‘¼‚Ìê‡ ‘SƒQ[ƒ€‚ÌI—¹
+			default:			// ãã®ä»–ã®å ´åˆ å…¨ã‚²ãƒ¼ãƒ ã®çµ‚äº†
 				one_gameend_flag = 1;
 				whole_gameend_flag = 1;
 				if (g_logging == 1) {
-					printf("All game was finished(Total %d games.)\n",
+					printf("All game was finished(Total %d games.)Â¥n",
 						   game_count);
 				}
 				break;
 			}
-		}						// 1ƒQ[ƒ€‚ªI‚í‚é‚Ü‚Å‚ÌŒJ‚è•Ô‚µ‚±‚±‚Ü‚Å
-	}							// ‘SƒQ[ƒ€‚ªI‚í‚é‚Ü‚Å‚ÌŒJ‚è•Ô‚µ‚±‚±‚Ü‚Å
-	// ƒ\ƒPƒbƒg‚ğ•Â‚¶‚ÄI—¹
+		}						// 1ã‚²ãƒ¼ãƒ ãŒçµ‚ã‚ã‚‹ã¾ã§ã®ç¹°ã‚Šè¿”ã—ã“ã“ã¾ã§
+	}							// å…¨ã‚²ãƒ¼ãƒ ãŒçµ‚ã‚ã‚‹ã¾ã§ã®ç¹°ã‚Šè¿”ã—ã“ã“ã¾ã§
+	// ã‚½ã‚±ãƒƒãƒˆã‚’é–‰ã˜ã¦çµ‚äº†
 	if (closeSocket() != 0) {
-		printf("failed to close socket\n");
+		printf("failed to close socketÂ¥n");
 		exit(1);
 	}
 	exit(0);

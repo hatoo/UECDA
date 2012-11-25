@@ -2,20 +2,23 @@
 #include <set>
 #include <iostream>
 #include <cmath>
+#include "cardSelect.h"
 #include "mydef.h"
 #include "handGenerator.h"
 #include "bitCard.h"
 #include "myrandom.h"
 #include "mydebug.h"
 #include "montecarlo.h"
+#include "machineLearn.h"
+#include "fastWeakAI.h"
 
 using namespace std;
 
-int count=0;
-int mcount =0;
+AImode mode = MLAI;
 
-/*void removeHands(vector<Hand> &hands,Hand){
-}*/
+void setMode(AImode m){
+	mode=m;
+}
 
 bool isWIN(fieldInfo info,Cards myCards,Cards oppCards,int maxHandNum,set<Cards>& failed){
 	if(failed.find(myCards)!=failed.end())return false;
@@ -59,14 +62,28 @@ Hand winHand(fieldInfo info,Cards myCards,Cards oppCards,int maxHandNum){
 	}
 	Hand h;
 	h.qty=0;
-	if(count<failed.size()){
+	//if(count<failed.size()){
 		//cerr << "size=" << failed.size() << endl;
 		//count=failed.size();
-	}
+	//}
 	return h;
 }
 
-void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
+Hand selectHand_(fieldInfo info,Cards myCards,Cards oppCards,
+		const changeInfo cinfo){
+	int maxHandNum=info.maxOppHandNum();
+	Hand h = winHand(info,myCards,oppCards,maxHandNum);
+	Hand pass;pass.qty=0;
+	//return (fastWeakAI(info,myCards,oppCards));
+	//*
+	return (h.qty!=0?h:
+			(!checkAllValidHands(info,myCards)?
+			 pass:montecalroSearch(info,myCards,oppCards,cinfo)));
+}
+
+
+void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards
+		,const changeInfo& cinfo){
 	//vector<Hand> hs=getAllValidHands(info,myCards);
 	/*int idx=0;
 	for(int i=0;i<hs.size();i++){
@@ -86,13 +103,24 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		dumpFinfo(info);
 	}
 */
-	int maxHandNum=0;
+	int maxHandNum=info.maxOppHandNum();
+		/*0;
 	for(int i=0;i<5;i++){
 		if(i!=info.mypos){
 			maxHandNum=max(maxHandNum,info.lest[i]);
 		}
-	}
+	}*/
 	Hand h = winHand(info,myCards,oppCards,maxHandNum);
+	if(h.qty!=0){ 
+		setSubmitCard(p,h);
+		return;
+	}
+	if(!checkAllValidHands(info,myCards)){
+		Hand pass;pass.qty=0;pass.hands=0uLL;
+		setSubmitCard(p,pass);
+		return;
+	}
+
 	/*
 	if(count > mcount){
 		cerr << "count= " << count << endl;
@@ -112,6 +140,18 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 	}*/
 	//Cards out[5];
 	//DevideCards(info,oppCards,out);
+	switch(mode){
+		case FWAI:
+			setSubmitCard(p,
+					montecalroSearch_Functional(info,myCards,oppCards,cinfo,
+						[](const fieldInfo& info,Cards myCards,Cards oppCards,const changeInfo &cinfo){
+						return fwAI1(info,myCards,oppCards);
+						},3000));
+			break;
+		case MLAI:
+			setSubmitCard(p,montecalroSearch(info,myCards,oppCards,cinfo));
+			break;
+	}
 	/*
 	int o = playout(info,hs.back(),myCards,oppCards);
 	if(h.qty>0 && o!=bitCount(info.goal)){
@@ -120,10 +160,22 @@ void selectHand(ProtocolCards p,fieldInfo& info,Cards myCards,Cards oppCards){
 		cerr << "goal= " << bitCount(info.goal) << endl;
 		cerr << endl;
 	}*/
-	Hand pass;pass.qty=0;
-	//setSubmitCard(p,fastWeakAI(info,myCards,oppCards));
+		//setSubmitCard(p,mlAI(info,myCards,oppCards,cinfo));
 	//*
-	setSubmitCard(p,h.qty!=0?h:
-			(!checkAllValidHands(info,myCards)?pass:montecalroSearch(info,myCards,oppCards)));
+	/*setSubmitCard(p,montecalroSearch_Functional(info,myCards,oppCards
+				,cinfo
+				,[](const fieldInfo& info,Cards myCards,Cards oppCards,const changeInfo &cinfo){
+				if(!checkAllValidHands(info,myCards)){
+					Hand pass;pass.qty=0;pass.hands=0uLL;
+					return pass;
+				}
+				vector<Hand> hs = info.onset?
+					getOnsetHands(myCards):
+					getAllValidHands(info,myCards);
+				if(hs.size()==1)return hs[0];
+				//if(randDouble(0.0,1.0)<=0.1)return hs.back();
+				return hs[randInt(0,hs.size()-2)];
+				},60000));*/
+	//setSubmitCard(p,DoubleMontecalroSearch(info,myCards,oppCards,cinfo));
 	// */
 }

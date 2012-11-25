@@ -11,12 +11,13 @@ class ucb1Record{
 		int n;
 		public:
 		void pushScore(double score);
-		double x();
-		double var2();
+		double x() const;
+		double var2() const;
 		T tag;
 		ucb1Record(T t);
-		double ucb1_tuned(int nf);
-		double ucb1(int nf);
+		ucb1Record(){}
+		double ucb1_tuned(int nf) const;
+		double ucb1(int nf) const;
 };
 
 template<class T>
@@ -34,27 +35,28 @@ void ucb1Record<T>::pushScore(double score){
 }
 
 template<class T>
-double ucb1Record<T>::x(){
+double ucb1Record<T>::x() const{
 	if(n==0)return INF_SCORE;
 	return s/n;
 }
 
 template<class T>
-double ucb1Record<T>::var2(){
+double ucb1Record<T>::var2() const{
 	if(n==0)return INF_SCORE;
 	return s2/n-(s*s)/(n*n);
 }
 
 template<class T>
-double ucb1Record<T>::ucb1_tuned(int nf){
-	if(n==0)return INF_SCORE;
+double ucb1Record<T>::ucb1_tuned(int nf) const{
+	if(n==0){return INF_SCORE;}
 	double c1 = min(0.25,var2()+sqrt(2.0*log(nf)/n));
 	double x1 = x() + sqrt(c1*log((double)nf)/n);
 	return x1;
 }
 
 template<class T>
-double ucb1Record<T>::ucb1(int nf){
-	if(n==0)return INF_SCORE;
+double ucb1Record<T>::ucb1(int nf) const{
+	if(n==0){return INF_SCORE;}
+	
 	return x()+sqrt(2.0*log((double)nf)/n);
 }

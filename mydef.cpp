@@ -6,8 +6,12 @@
 
 using namespace std;
 
-bool Hand::jokerUsed(){
+bool Hand::jokerUsed() const{
 	return bitCount(hands)!=qty;
+}
+
+bool Hand::rev() const{
+	return seq?qty>=5:qty==4;
 }
 
 void fieldInfo::set(int my_num,ProtocolCards& p){
@@ -83,7 +87,7 @@ void fieldInfo::set_ba(ProtocolCards& cards){
 	}
 }
 
-bool fieldInfo::SingleJoker(){
+bool fieldInfo::SingleJoker() const{
 	return qty==1&&(rev?ord==-1:ord==13);
 }
 
@@ -153,6 +157,53 @@ int fieldInfo::simulate(const Hand &h,int pos){
 	}
 }
 
+int fieldInfo::maxOppHandNum() const{
+	int n=0;
+	for(int i=0;i<5;i++){
+		if(i!=mypos){
+			n=max(n,lest[i]);
+		}
+	}
+	return n;
+}
+
+void changeInfo::set(Cards before,Cards after,fieldInfo info){
+	int myrank = info.rank[info.mypos];
+	/*
+	cerr << "myrank: " << myrank << endl;
+	cerr << "before: ";dumpCards(before);
+	cerr << "after : ";dumpCards(after);
+	cerr << "d     : ";dumpCards((before|after)^(before&after)); 
+	*/
+	hasCards = 0LL;
+	notCards = 0LL;
+	oppPos   = 0;
+	if(myrank==2)return;//平民
+	int opprank=4-myrank;
+	for(int i=0;i<5;i++){
+		if(info.rank[i]==opprank)oppPos=i;
+	}
+	hasCards = (before&after)^before;
+	/*
+	//cerr << "hasCards: ";dumpCards(hasCards);
+	 * 自分が大富豪・富豪だった場合交換相手から
+	 * 何をもらったかで相手が持ち得ないカードの集合が
+	 * 得る予定だったがサーバーの仕様上そういうことは
+	 * できないようだ
+	if(myrank<=1){
+		Cards delta = (before&after)^after;
+		Cards mask  = (1LL<<53)-1;
+
+		for(int i=0;i<53;i++){
+			if(delta&(1LL<<i)){
+				mask = mask ^ ((1LL<<(i+1))-1);
+				notCards = mask;
+				break;
+			}
+		}
+	}
+	*/
+}
 
 /*
 void fieldInfo::set_ba(ProtocolCards &cards){
