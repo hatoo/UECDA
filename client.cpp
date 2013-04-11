@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 					cerr << "ord= " << (int)finfo.ord << endl;
 					cerr << "suit=" << (int)finfo.suit<< endl;
 					cerr << "rev= " << (int)finfo.rev << endl;
-					cerr << "lock=" << (int)finfo.rev << endl;
+					cerr << "lock=" << (int)finfo.lock << endl;
 					cerr << endl;
 
 					cerr << "tehuda" << endl;

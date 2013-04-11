@@ -1,6 +1,6 @@
 #include "fastWeakAI.h"
 #include "mydef.h"
-#include "HandGenerator.h"
+#include "handGenerator.h"
 #include "bitCard.h"
 
 #include <boost/foreach.hpp>
