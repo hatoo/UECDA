@@ -498,12 +498,12 @@ uvector delta_theta(mlTEXT text,uvector theta){
 }
 
 uvector loaded_theta;
-double array[vector_size];
+double myarray[vector_size];
 
 void initmlAI(const char *fname){
 	loaded_theta=load(fname);
 	for(int i=0;i<vector_size;i++){
-		array[i]=loaded_theta[i];
+		myarray[i]=loaded_theta[i];
 	}
 }
 
@@ -584,7 +584,7 @@ Hand mlAI(const fieldInfo &info,Cards myCards){
 	//#pragma omp parallel for reduction(+:sum)
 	for(int i=0;i<loopnum;i++){
 		if(tehuda==hs[i].qty)return hs[i];
-		const double ratio = calcScore_fast(myCards,hs[i],info.rev,array);//loaded_theta);
+		const double ratio = calcScore_fast(myCards,hs[i],info.rev,myarray);//loaded_theta);
 		sum+=ratio;
 		ratios[i]=ratio;
 	}
